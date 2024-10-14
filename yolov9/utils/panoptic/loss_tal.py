@@ -75,24 +75,24 @@ class BboxLoss(nn.Module):
         target_bboxes_pos = torch.masked_select(target_bboxes, bbox_mask).view(-1, 4)
         bbox_weight = torch.masked_select(target_scores.sum(-1), fg_mask).unsqueeze(-1)
         
-        iou = bbox_iou(pred_bboxes_pos, target_bboxes_pos, xywh=False, CIoU=True)
-        loss_iou = 1.0 - iou
+        # iou = bbox_iou(pred_bboxes_pos, target_bboxes_pos, xywh=False, CIoU=True)
+        # loss_iou = 1.0 - iou
                 
         #### wiou
-        #iou = bbox_iou(pred_bboxes_pos, target_bboxes_pos, xywh=False, WIoU=True, scale=True)
-        #if type(iou) is tuple:
-        #    if len(iou) == 2:
-        #        loss_iou = (iou[1].detach() * (1 - iou[0]))
-        #        iou = iou[0]
-        #    else:
-        #        loss_iou = (iou[0] * iou[1])
-        #        iou = iou[-1]
-        #else:
-        #    loss_iou = (1.0 - iou)  # iou loss
+        iou = bbox_iou(pred_bboxes_pos, target_bboxes_pos, xywh=False, WIoU=True, scale=True)
+        if type(iou) is tuple:
+           if len(iou) == 2:
+               loss_iou = (iou[1].detach() * (1 - iou[0]))
+               iou = iou[0]
+           else:
+               loss_iou = (iou[0] * iou[1])
+               iou = iou[-1]
+        else:
+           loss_iou = (1.0 - iou)  # iou loss
 
         loss_iou *= bbox_weight
-        loss_iou = loss_iou.sum() / target_scores_sum
-        # loss_iou = loss_iou.mean()
+        # loss_iou = loss_iou.sum() / target_scores_sum
+        loss_iou = loss_iou.mean()
 
         # dfl loss
         if self.use_dfl:
