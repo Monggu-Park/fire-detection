@@ -251,7 +251,7 @@ class WIoU_Scale:
         return 1
 
 
-def bbox_iou(box1, box2, xywh=True, GIoU=False, DIoU=False, CIoU=False, MDPIoU=False, feat_h=640, feat_w=640, eps=1e-7):
+def bbox_iou(box1, box2, xywh=True, GIoU=False, DIoU=False, CIoU=False, MDPIoU=False, WIoU=False, scale=False, feat_h=640, feat_w=640, eps=1e-7):
     # Returns Intersection over Union (IoU) of box1(1,4) to box2(n,4)
 
     # Get the coordinates of bounding boxes
@@ -294,6 +294,10 @@ def bbox_iou(box1, box2, xywh=True, GIoU=False, DIoU=False, CIoU=False, MDPIoU=F
         d2 = (b2_x2 - b1_x2) ** 2 + (b2_y2 - b1_y2) ** 2
         mpdiou_hw_pow = feat_h ** 2 + feat_w ** 2
         return iou - d1 / mpdiou_hw_pow - d2 / mpdiou_hw_pow  # MPDIoU
+    elif WIoU:
+        wiou_scale = WIoU_Scale(iou)  # WIoU_Scale 클래스 호출
+        return wiou_scale._scaled_loss(self=wiou_scale) * iou #가중치 적용 IoU 반환
+
     return iou  # IoU
 
 
