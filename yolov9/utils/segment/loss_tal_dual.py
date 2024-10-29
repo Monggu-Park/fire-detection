@@ -6,12 +6,12 @@ import torch.nn.functional as F
 
 from torchvision.ops import sigmoid_focal_loss
 
-from utils.general import xywh2xyxy, xyxy2xywh
-from utils.metrics import bbox_iou
-from utils.segment.tal.anchor_generator import dist2bbox, make_anchors, bbox2dist
-from utils.segment.tal.assigner import TaskAlignedAssigner
-from utils.torch_utils import de_parallel
-from utils.segment.general import crop_mask
+from yolov9.utils.general import xywh2xyxy, xyxy2xywh
+from yolov9.utils.metrics import bbox_iou
+from yolov9.utils.segment.tal.anchor_generator import dist2bbox, make_anchors, bbox2dist
+from yolov9.utils.segment.tal.assigner import TaskAlignedAssigner
+from yolov9.utils.torch_utils import de_parallel
+from yolov9.utils.segment.general import crop_mask
 
 
 def smooth_BCE(eps=0.1):  # https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441
@@ -75,7 +75,7 @@ class BboxLoss(nn.Module):
         target_bboxes_pos = torch.masked_select(target_bboxes, bbox_mask).view(-1, 4)
         bbox_weight = torch.masked_select(target_scores.sum(-1), fg_mask).unsqueeze(-1)
         
-        iou = bbox_iou(pred_bboxes_pos, target_bboxes_pos, xywh=False, CIoU=True)
+        iou = bbox_iou(pred_bboxes_pos, target_bboxes_pos, xywh=False, WIoU=True)
         loss_iou = 1.0 - iou
 
         loss_iou *= bbox_weight

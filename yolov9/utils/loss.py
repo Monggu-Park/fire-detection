@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils.metrics import bbox_iou
+from yolov9.utils.metrics import bbox_iou
 from utils.torch_utils import de_parallel
 
 
@@ -138,7 +138,7 @@ class ComputeLoss:
                 pxy = pxy.sigmoid() * 1.6 - 0.3
                 pwh = (0.2 + pwh.sigmoid() * 4.8) * self.anchors[i]
                 pbox = torch.cat((pxy, pwh), 1)  # predicted box
-                iou = bbox_iou(pbox, tbox[i], CIoU=True).squeeze()  # iou(prediction, target)
+                iou = bbox_iou(pbox, tbox[i], WIoU=True).squeeze()  # iou(prediction, target)
                 loss[0] += (1.0 - iou).mean()  # box loss
 
                 # Objectness
@@ -270,7 +270,7 @@ class ComputeLoss_NEW:
 
                 # Regression
                 pbox = torch.cat((pxy.sigmoid() * 1.6 - 0.3, (0.2 + pwh.sigmoid() * 4.8) * self.anchors[i]), 2)
-                iou = bbox_iou(pbox, tbox[i], CIoU=True).squeeze()  # iou(predicted_box, target_box)
+                iou = bbox_iou(pbox, tbox[i], WIoU=True).squeeze()  # iou(predicted_box, target_box)
                 obj_target = iou.detach().clamp(0).type(pi.dtype)  # objectness targets
 
                 all_loss.append([(1.0 - iou) * self.hyp['box'],
