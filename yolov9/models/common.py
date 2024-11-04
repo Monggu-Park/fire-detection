@@ -39,7 +39,128 @@ def autopad(k, p=None, d=1):  # kernel, padding, dilation
         p = k // 2 if isinstance(k, int) else [x // 2 for x in k]  # auto-pad
     return p
 
+class h_sigmoid(nn.Module):
+    def __init__(self, inplace=True):
+        super(h_sigmoid, self).__init__()
+        self.relu = nn.ReLU6(inplace=inplace)
 
+    def forward(self, x):
+        return self.relu(x + 3) / 6
+
+class h_swish(nn.Module):
+    def __init__(self, inplace=True):
+        super(h_swish, self).__init__()
+        self.sigmoid = h_sigmoid(inplace=inplace)
+
+    def forward(self, x):
+        return x * self.sigmoid(x)
+
+class CoordAtt(nn.Module):
+    def __init__(self, inp, oup, reduction=32):
+        super(CoordAtt, self).__init__()
+        self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
+        self.pool_w = nn.AdaptiveAvgPool2d((1, None))
+
+        mip = max(8, inp // reduction)
+
+        self.conv1 = nn.Conv2d(inp, mip, kernel_size=1, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(mip)
+        self.act = h_swish()
+        
+        self.conv_h = nn.Conv2d(mip, oup, kernel_size=1, stride=1, padding=0)
+        self.conv_w = nn.Conv2d(mip, oup, kernel_size=1, stride=1, padding=0)
+        
+
+    def forward(self, x):
+        identity = x
+        
+        n,c,h,w = x.size()
+        x_h = self.pool_h(x)
+        x_w = self.pool_w(x).permute(0, 1, 3, 2)
+
+        y = torch.cat([x_h, x_w], dim=2)
+        y = self.conv1(y)
+        y = self.bn1(y)
+        y = self.act(y) 
+        
+        x_h, x_w = torch.split(y, [h, w], dim=2)
+        x_w = x_w.permute(0, 1, 3, 2)
+
+        a_h = self.conv_h(x_h).sigmoid()
+        a_w = self.conv_w(x_w).sigmoid()
+
+        out = identity * a_w * a_h
+
+        return out
+
+class ConvBNReLU(nn.Module):
+    '''Module for the Conv-BN-ReLU tuple.'''
+    def __init__(self, c_in, c_out, kernel_size, stride, padding, dilation,
+                 use_relu=True):
+        super(ConvBNReLU, self).__init__()
+        self.conv = nn.Conv2d(
+                c_in, c_out, kernel_size=kernel_size, stride=stride, 
+                padding=padding, dilation=dilation, bias=False)
+        self.bn = nn.BatchNorm2d(c_out)
+        if use_relu:
+            self.relu = nn.ReLU(inplace=True)
+        else:
+            self.relu = None
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.bn(x)
+        if self.relu is not None:
+            x = self.relu(x)
+        return x
+
+
+class CARAFE(nn.Module):
+    def __init__(self, c, c_mid=64, scale=2, k_up=5, k_enc=3):
+        """ The unofficial implementation of the CARAFE module.
+
+        The details are in "https://arxiv.org/abs/1905.02188".
+
+        Args:
+            c: The channel number of the input and the output.
+            c_mid: The channel number after compression.
+            scale: The expected upsample scale.
+            k_up: The size of the reassembly kernel.
+            k_enc: The kernel size of the encoder.
+
+        Returns:
+            X: The upsampled feature map.
+        """
+        super(CARAFE, self).__init__()
+        self.scale = scale
+
+        self.comp = ConvBNReLU(c, c_mid, kernel_size=1, stride=1, 
+                               padding=0, dilation=1)
+        self.enc = ConvBNReLU(c_mid, (scale*k_up)**2, kernel_size=k_enc, 
+                              stride=1, padding=k_enc//2, dilation=1, 
+                              use_relu=False)
+        self.pix_shf = nn.PixelShuffle(scale)
+
+        self.upsmp = nn.Upsample(scale_factor=scale, mode='nearest')
+        self.unfold = nn.Unfold(kernel_size=k_up, dilation=scale, 
+                                padding=k_up//2*scale)
+
+    def forward(self, X):
+        b, c, h, w = X.size()
+        h_, w_ = h * self.scale, w * self.scale
+        
+        W = self.comp(X)                                # b * m * h * w
+        W = self.enc(W)                                 # b * 100 * h * w
+        W = self.pix_shf(W)                             # b * 25 * h_ * w_
+        W = F.softmax(W, dim=1)                         # b * 25 * h_ * w_
+
+        X = self.upsmp(X)                               # b * c * h_ * w_
+        X = self.unfold(X)                              # b * 25c * h_ * w_
+        X = X.view(b, c, -1, h_, w_)                    # b * 25 * c * h_ * w_
+
+        X = torch.einsum('bkhw,bckhw->bchw', [W, X])    # b * c * h_ * w_
+        return X
+        
 class Conv(nn.Module):
     # Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)
     default_act = nn.SiLU()  # default activation
