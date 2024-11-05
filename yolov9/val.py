@@ -189,15 +189,15 @@ def run(
         # Inference
         with dt[1]:
             preds, train_out = model(im) if compute_loss else (model(im, augment=augment), None)
-
-
-        # Loss
-        if compute_loss:
-            loss += compute_loss(train_out, targets)[1]  # box, obj, cls
             if isinstance(preds, list):
               preds = preds[0]
             if isinstance(train_out, list):
               train_out = train_out[0]
+
+        # Loss
+        if compute_loss:
+            loss += compute_loss(train_out, targets)[1]  # box, obj, cls
+            
         # NMS
         targets[:, 2:] *= torch.tensor((width, height, width, height), device=device)  # to pixels
         lb = [targets[targets[:, 0] == i, 1:] for i in range(nb)] if save_hybrid else []  # for autolabelling
