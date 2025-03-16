@@ -5,7 +5,7 @@
 
 Implementation of paper(Korean, 한국어) - https://drive.google.com/file/d/1tUDc6iFb-1lY77JKCxAELDSp_xPL_9n4/view?usp=sharing
 
-동국대학교 2024학년 2학기 개별연구 프로젝트로 객체 탐지 모델인 YOLOv9의 일부 구조를 추가하거나 변경하여 화재와 연기 이미지에서 화재와 연기에 대한 평균 정밀도(AP)를 향상시키는 것을 목표로 한다.
+동국대학교 2024학년 2학기 개별연구 프로젝트로 객체 탐지 모델인 YOLOv9의 일부 구조를 추가하거나 변경하여 화재와 연기 이미지에서 화재와 연기에 대한 평균 정밀도(AP)를 향상 시키는 것을 목표로 한다.
 
 
 
@@ -36,7 +36,7 @@ ODConv - https://github.com/OSVAI/ODConv
 
 ## 📚 연구 방법
 
-YOLOv9에 Coordinate Attention Module, CARAFE, ODConv를 적용하여 각각 훈련을 진행하고 AP를 측정한 다음, 가장 AP가 높은 모델을 선택하여 WIoU를 적용 후 훈련을 진행하여 WIoU Loss가 화재 및 연기 탐지 성능을 증가시키는 지 확인
+YOLOv9에 Coordinate Attention Module, CARAFE, ODConv를 적용하여 각각 훈련을 진행하고 AP를 측정한 다음, 가장 AP가 높은 모델을 선택하여 WIoU를 적용 후 훈련을 진행하여 WIoU Loss가 화재 및 연기 탐지 성능을 증가 시키는지 확인
 
 각 브랜치 명은 YOLOv9에 어떤 점이 변경되어 있는 지를 나타냄
 
