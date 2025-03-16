@@ -2,7 +2,6 @@
 
 ### Real-Time Performance Optimization of YOLOv9 for Advanced Fire and Smoke Detection
 
--------
 
 Implementation of paper(Korean, 한국어) - https://drive.google.com/file/d/1tUDc6iFb-1lY77JKCxAELDSp_xPL_9n4/view?usp=sharing
 
@@ -12,8 +11,6 @@ Implementation of paper(Korean, 한국어) - https://drive.google.com/file/d/1tU
 
 ## 🧑‍🤝‍🧑 팀원(Team)
 
-------
-
 박규영([**Monggu-Park**](https://github.com/Monggu-Park)) - YOLOv9에 WIoU Loss 적용, git 관리
 
 김상현([**rlatkdgus2627**](https://github.com/rlatkdgus2627)) - YOLOv9에 CA, CARAFE, ODConv 적용, dataset 준비, 전체 모델 AP, fps 측정
@@ -22,15 +19,11 @@ Implementation of paper(Korean, 한국어) - https://drive.google.com/file/d/1tU
 
 ## 🕰️ 프로젝트 기간
 
--------
-
 2024.09.04 ~ 2024.12.18
 
 
 
 ## 🖥️ 사용 및 참고한 소스코드
-
-------
 
 YOLOv9 - https://github.com/WongKinYiu/yolov9
 
@@ -40,9 +33,8 @@ CARAFE - https://github.com/XiaLiPKU/CARAFE
 
 ODConv - https://github.com/OSVAI/ODConv
 
-## 📚 연구 방법
 
------
+## 📚 연구 방법
 
 YOLOv9에 Coordinate Attention Module, CARAFE, ODConv를 적용하여 각각 훈련을 진행하고 AP를 측정한 다음, 가장 AP가 높은 모델을 선택하여 WIoU를 적용 후 훈련을 진행하여 WIoU Loss가 화재 및 연기 탐지 성능을 증가시키는 지 확인
 
@@ -98,7 +90,5 @@ python val.py --img 640 --batch 32 --conf 0.001 --iou 0.7 --device 0 --data {HOM
 
 
 ## 📜연구 결과
-
-----
 
 YOLOv9에 CA + ODConv을 적용한 모델이 가장 성능이 좋은 것을 알 수 있다. (성능 측정 결과는 논문 참고)
